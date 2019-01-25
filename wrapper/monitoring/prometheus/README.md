@@ -12,12 +12,16 @@ for each microservice method execution time and operation count for success and 
 # Usage
 
 ```go
-    service = micro.NewService(
+    service := micro.NewService(
         micro.Name("service name"),
     	micro.Version("latest"),
-    	micro.WrapHandler(prometheus.NewHandlerWrapper((*proto.MyServiceInterface)(nil))),
+    	micro.WrapHandler(prometheus.NewHandlerWrapper()),
     )
     
     service.Init()
     proto.RegisterGeoIpServiceHandler(service.Server(), &pacage.ServiceImplimentation{})   	
 ```
+
+This handler will export two metrics to prometheus:
+* **go_micro_requests_total**. How many go-miro requests processed, partitioned by method and status.
+* **go_micro_request_durations_microseconds**. Service method request latencies in microseconds.

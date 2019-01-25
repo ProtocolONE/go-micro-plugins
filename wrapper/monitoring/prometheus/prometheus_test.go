@@ -41,7 +41,7 @@ func TestPrometheusMetrics(t *testing.T) {
 	s := server.NewServer(
 		server.Name(name),
 		server.Registry(registry),
-		server.WrapHandler(NewHandlerWrapper((*Test)(nil))),
+		server.WrapHandler(NewHandlerWrapper()),
 	)
 
 	type Test struct {
@@ -70,15 +70,24 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	list, _ := prometheus.DefaultGatherer.Gather()
 
-	metric := findMetricByName(list, dto.MetricType_SUMMARY, "test_method_request_durations")
-	assert.NotNil(t, metric)
+	metric := findMetricByName(list, dto.MetricType_SUMMARY, "go_micro_request_durations_microseconds")
+	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
+	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
 	assert.Equal(t, *metric.Metric[0].Summary.SampleCount, uint64(2))
+	assert.True(t, *metric.Metric[0].Summary.SampleSum > 0)
 
-	metric = findMetricByName(list, dto.MetricType_COUNTER, "test_method_requests_total")
-	assert.Equal(t, *metric.Metric[0].Label[0].Value, "fail")
+	metric = findMetricByName(list, dto.MetricType_COUNTER, "go_micro_requests_total")
+
+	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
+	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
+	assert.Equal(t, *metric.Metric[0].Label[1].Name, "status")
+	assert.Equal(t, *metric.Metric[0].Label[1].Value, "fail")
 	assert.Equal(t, *metric.Metric[0].Counter.Value, float64(1))
 
-	assert.Equal(t, *metric.Metric[1].Label[0].Value, "success")
+	assert.Equal(t, *metric.Metric[1].Label[0].Name, "method")
+	assert.Equal(t, *metric.Metric[1].Label[0].Value, "Test.Method")
+	assert.Equal(t, *metric.Metric[1].Label[1].Name, "status")
+	assert.Equal(t, *metric.Metric[1].Label[1].Value, "success")
 	assert.Equal(t, *metric.Metric[1].Counter.Value, float64(1))
 
 	s.Deregister()
