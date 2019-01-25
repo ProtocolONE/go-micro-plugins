@@ -15,8 +15,8 @@ func NewHandlerWrapper() server.HandlerWrapper {
 		[]string{"method", "status"},
 	)
 
-	timeCounter := prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
+	timeCounter := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
 			Name: "go_micro_request_durations_microseconds",
 			Help: "Service method request latencies in microseconds",
 		},
