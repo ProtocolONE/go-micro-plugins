@@ -15,23 +15,34 @@ func NewHandlerWrapper() server.HandlerWrapper {
 		[]string{"method", "status"},
 	)
 
-	timeCounter := prometheus.NewHistogramVec(
+	timeCounterHistogram := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "go_micro_request_durations_microseconds",
-			Help: "Service method request latencies in microseconds",
+			Name: "go_micro_request_duration_seconds",
+			Help: "Service method request time in seconds",
 		},
 		[]string{"method"},
 	)
 
+	timeCounterSummary := prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "go_micro_upstream_latency_seconds",
+			Help: "Service backend method request latencies in seconds",
+		},
+		[]string{"method"},
+	)
+
+
 	prometheus.MustRegister(opsCounter)
-	prometheus.MustRegister(timeCounter)
+	prometheus.MustRegister(timeCounterHistogram)
+	prometheus.MustRegister(timeCounterSummary)
 
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
 			name := req.Endpoint()
 
 			timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-				timeCounter.WithLabelValues(name).Observe(v)
+				timeCounterHistogram.WithLabelValues(name).Observe(v)
+				timeCounterSummary.WithLabelValues(name).Observe(v)
 			}))
 			defer timer.ObserveDuration()
 
