@@ -76,15 +76,13 @@ func TestPrometheusMetrics(t *testing.T) {
 	assert.Equal(t, *metric.Metric[0].Histogram.SampleCount, uint64(2))
 	assert.True(t, *metric.Metric[0].Histogram.SampleSum > 0)
 
-	metric := findMetricByName(list, dto.MetricType_SUMMARY, "go_micro_upstream_latency_seconds")
+	metric = findMetricByName(list, dto.MetricType_SUMMARY, "go_micro_upstream_latency_seconds")
 	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
 	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
 	assert.Equal(t, *metric.Metric[0].Summary.SampleCount, uint64(2))
 	assert.True(t, *metric.Metric[0].Summary.SampleSum > 0)
 
-
 	metric = findMetricByName(list, dto.MetricType_COUNTER, "go_micro_requests_total")
-
 	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
 	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
 	assert.Equal(t, *metric.Metric[0].Label[1].Name, "status")
