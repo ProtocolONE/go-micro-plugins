@@ -25,8 +25,8 @@ func NewHandlerWrapper() server.HandlerWrapper {
 
 	timeCounterSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "go_micro_upstream_latency_seconds",
-			Help: "Service backend method request latencies in seconds",
+			Name: "go_micro_upstream_latency_microseconds",
+			Help: "Service backend method request latencies in microseconds",
 		},
 		[]string{"method"},
 	)
@@ -41,8 +41,9 @@ func NewHandlerWrapper() server.HandlerWrapper {
 			name := req.Endpoint()
 
 			timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+				us := v * 1000000 // make microseconds
 				timeCounterHistogram.WithLabelValues(name).Observe(v)
-				timeCounterSummary.WithLabelValues(name).Observe(v)
+				timeCounterSummary.WithLabelValues(name).Observe(us)
 			}))
 			defer timer.ObserveDuration()
 
