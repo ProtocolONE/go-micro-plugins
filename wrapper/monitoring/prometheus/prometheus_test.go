@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/micro/go-micro/client"
+	"github.com/micro/go-micro/client/selector"
 	"github.com/micro/go-micro/registry/memory"
-	"github.com/micro/go-micro/selector"
 	"github.com/micro/go-micro/server"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
@@ -56,10 +56,6 @@ func TestPrometheusMetrics(t *testing.T) {
 		t.Fatalf("Unexpected error starting server: %v", err)
 	}
 
-	if err := s.Register(); err != nil {
-		t.Fatalf("Unexpected error registering server: %v", err)
-	}
-
 	req := c.NewRequest(name, "Test.Method", &TestRequest{IsError: false}, client.WithContentType("application/json"))
 	rsp := TestResponse{}
 
@@ -95,7 +91,6 @@ func TestPrometheusMetrics(t *testing.T) {
 	assert.Equal(t, *metric.Metric[1].Label[1].Value, "success")
 	assert.Equal(t, *metric.Metric[1].Counter.Value, float64(1))
 
-	s.Deregister()
 	s.Stop()
 }
 
