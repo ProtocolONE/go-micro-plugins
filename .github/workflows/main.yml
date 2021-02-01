@@ -1,0 +1,50 @@
+name: Build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  JENKINS_AUTH_TOKEN: ${{ secrets.JENKINS_AUTH_TOKEN }}
+  JENKINS_BUILD_TOKEN: ${{ secrets.JENKINS_BUILD_TOKEN }}
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.11'
+
+      - name: Tests
+        env:
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+      - name: publish codecov
+        run: bash <(curl -s https://codecov.io/bash)
+  
+  slack-notification:
+    needs: [tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Slack Workflow Notification
+        uses: paysuper/slack-workflow-status@bf843cb0d4232727f23be661dd571cce0024957e
+        with:
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
